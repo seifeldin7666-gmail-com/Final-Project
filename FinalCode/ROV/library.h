@@ -5,16 +5,23 @@
 
 #include <stdint.h>
 
-#include "CytronMotorDriver.h"
 #include "PIDController.h"
 
 
 #define GRAVITY 9.81
+#define ROVMASS 20
 
 #define GET_X 'x'
 #define GET_Y  'y'
 #define GET_Z  'z'
 #define GET_TEMP 't'
+
+#define KP_HOR 10
+#define KD_HOR 0
+
+#define KP_VER 10
+#define KD_VER 0
+
 
 #define  BUTTON_UP 12
 #define  BUTTON_DOWN 10

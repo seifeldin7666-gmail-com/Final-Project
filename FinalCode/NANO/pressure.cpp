@@ -75,8 +75,8 @@ void PR_get_Results(unsigned int *pressure , float *temp){
   result4 = SPI.transfer(0x00);
   result4 = result4 <<8;
   inbyte4 = SPI.transfer(0x00);
-  result4 = result4 | inbyte4;;
-
+  result4 = result4 | inbyte4;; 
+ 
   //now we do some bitshifting to extract the calibration factors
   //out of the calibration words;
   long c1 = (result1 >> 1) & 0x7FFF;
@@ -102,7 +102,7 @@ void PR_get_Results(unsigned int *pressure , float *temp){
   D1 = presMSB | presLSB; //combine first and second byte of value
 
 
-  resetsensor(); //resets the sensor
+  resetsensor(); //resets the sensor 
 
   //Temperature:
   unsigned int tempMSB = 0; //first byte of value
@@ -130,8 +130,8 @@ void PR_get_Results(unsigned int *pressure , float *temp){
    *temp = TEMP/10;
 
 
-//   //2-nd order compensation only for T < 20°C or T > 45°C
-
+//   //2-nd order compensation only for T < 20Â°C or T > 45Â°C
+ 
 //   long T2 = 0;
 //   float P2 = 0;
 
@@ -143,7 +143,7 @@ void PR_get_Results(unsigned int *pressure , float *temp){
 //   else if (TEMP > 450)
 //     {
 //       T2 = (3 * (c6 + 24) * (450 - TEMP) * (450 - TEMP) ) >> 20;
-//       P2 = (T2 * (*pressure - 10000) ) >> 13;
+//       P2 = (T2 * (*pressure - 10000) ) >> 13;   
 //     }
 
 //   if ((TEMP < 200) || (TEMP > 450))
@@ -166,5 +166,5 @@ void PR_get_Results(unsigned int *pressure , float *temp){
 
 
 unsigned int PR_get_depth(unsigned int pressure){
-    return pressure/(GRAVITY * DENSITY);
+    return ((pressure * 100))/(GRAVITY * DENSITY);
 }

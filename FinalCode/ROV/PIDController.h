@@ -6,6 +6,7 @@
 #else
   #include "WProgram.h"
 #endif
+
 #define GRAPH     "graph"
 #define NOGRAPH   "nograph"
 #define VERBOSE   "verbose"
@@ -31,7 +32,7 @@ class PIDController {
   private:
     // Methods
     void printGraph(double sensorInput, String verbose);
-
+    
     // Variables - long
     unsigned long lastTime;
 
