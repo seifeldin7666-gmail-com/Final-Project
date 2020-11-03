@@ -2,16 +2,17 @@
 
 EthernetUDP udp;
 
-#define dir_1 A0
-#define pwm_1 A1
-#define dir_2 A2
-#define pwm_2 A3
-#define dir_3 A4
-#define pwm_3 A5
-#define dir_4 A6
-#define pwm_4 A7
-#define dir_5 5 //A8
-#define pwm_5 5 //A9
+#define dir_1 10
+#define pwm_1 2
+#define dir_2 11
+#define pwm_2 3
+#define dir_3 7
+#define pwm_3 4
+#define dir_4 8
+#define pwm_4 5
+#define dir_5_1 9
+#define dir_5_2 12 
+#define pwm_5 6 
 
 
 
@@ -22,13 +23,6 @@ float matrix1[4][3]={{-0.3571,0.3571,.25},{0.3571,0.3571,-.25},{0.3571,0.3571,.2
 float mul[4][1];
 float matrix2[3][1];
 
-// CytronMD motor(PWM_DIR, 3, 4);  // PWM = Pin 3, DIR = Pin 4.
-
-CytronMD motor1(PWM_DIR, 3, 4);  // PWM = Pin 3, DIR = Pin 4.
-CytronMD motor2(PWM_DIR, 5, 6);  // PWM = Pin 5, DIR = Pin 6.
-CytronMD motor3(PWM_DIR, 7, 8);  // PWM = Pin 7, DIR = Pin 8.
-CytronMD motor4(PWM_DIR, 9, 10);  // PWM = Pin 9, DIR = Pin 10.
-CytronMD motor5(PWM_DIR, 11, 12);  // PWM = Pin 11, DIR = Pin 12. Vertical
 
 uint8_t button;
 
@@ -69,7 +63,9 @@ void setup() {
   pinMode(pwm_4,OUTPUT);
   pinMode(dir_4,OUTPUT);
   pinMode(pwm_5,OUTPUT);
-  pinMode(dir_5,OUTPUT);
+  pinMode(dir_5_1,OUTPUT);
+  pinMode(dir_5_2,OUTPUT);
+
 
   uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05}; //0::1::2::3::4::5
   Ethernet.begin(mac,IPAddress(192,168,0,6));//192.168.0.6
@@ -98,14 +94,18 @@ void loop() {
   // analogWrite(pwm_1,map(mul[0][0] , 0 , 255 , 0 , 1023));
   switch(button){
     case BUTTON_UP:analogWrite(pwm_5,1023);
-                    digitalWrite(dir_5 , 1);
+                    digitalWrite(dir_5_1 , 1);
+                    digitalWrite(dir_5_2,0);
                     break;
     case BUTTON_DOWN:analogWrite(pwm_5,1023);
-                    digitalWrite(dir_5 , 0);break;
+                    digitalWrite(dir_5_1 , 0);
+                    digitalWrite(dir_5_2,1);
+                    break;
     default:double _Fz=pidZ.compute(depth);
                 //After some mapping Fz = map()
                     analogWrite(pwm_5,1023);
-                    digitalWrite(dir_5 ,_Fz ? 0 : 1);    
+                    digitalWrite(dir_5_1 ,_Fz ? 0 : 1); 
+                    digitalWrite(dir_5_2 ,_Fz ? 1 : 0);   
   }
 /**
  * forces[0]:FX
