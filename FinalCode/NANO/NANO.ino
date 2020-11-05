@@ -43,6 +43,8 @@ void loop(){
     //{int x , float x , sign x , int y , float y , sign y , pressure / 255 , pressure % 255 , depth}
 
     Serial.write(toBeSend , 9);
+
+//Serial.write(100);
     
 
 

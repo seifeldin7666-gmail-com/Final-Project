@@ -9,15 +9,15 @@
  * 
  * 
  * */
+ 
 EthernetUDP udp;
 
-IPAddress ROV(192,168,0,6);
-
-void send_data_to_python(uint8_t *sensors){
-  Serial.write(sensors, 5);
-}
+IPAddress ROV(192,168,137,6);
+#define ROVPORT 5100
 
 
+uint16_t fx , fy;   // 0 - 1023
+uint8_t Button; // 0 - 12 (0 = No button)
 
 USB                                             Usb;
 USBHub                                          Hub(&Usb);
@@ -25,34 +25,32 @@ HIDUniversal                                    Hid(&Usb);
 JoystickEvents                                  JoyEvents;
 JoystickReportParser                            Joy(&JoyEvents);
 
-uint16_t fx , fy;   // 0 - 1023
-uint8_t M=0;
-uint8_t Hat;    // 0 - 15;
-uint8_t Twist , slider;  // 0 - 255
-uint8_t Button; // 0 - 12 (0 = No button)
-int F;
+
 
 void setup(){
+  
+  uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05}; //0::1::2::3::4::5
+  Ethernet.begin(mac , IPAddress(192,168,137,7));//192.168.0.7
+  udp.begin(5000); // console port for receiving
+  
+  Serial.begin(115200);//To send data to python
 
-    Serial.begin(9600);//To send data to python
-
-
-  Serial.println("Start");
+  
   if (Usb.Init() == -1)
       Serial.println("OSC did not start.");
 
   if (!Hid.SetReportParser(0, &Joy))
-      ErrorMessage<uint8_t>(PSTR("SetReportParser"), 1  );
+      ErrorMessage<uint8_t>(PSTR("SetReportParser"),1);
 
-  uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05}; //0::1::2::3::4::6
-  Ethernet.begin(udp.remoteIP() , udp.remotePort());//192.168.0.7
-  udp.begin(5000); // console port for receiving
 }
 
 void loop(){
+ 
     Usb.Task();                                                    //Use to read joystick input to controller
     // JoyEvents.PrintValues();                                       //Returns joystick values to user
-    JoyEvents.GetValues( &fx, &fy, &Hat, &Twist, &slider, &Button);   //Copies joystick values to user
+    JoyEvents.GetValues( &fx, &fy, 0, 0 , 0, &Button);
+    JoyEvents.PrintValues();
+
 
     //We need to do some operations on forces in order to send them
     
@@ -62,33 +60,37 @@ void loop(){
     if ( JOYSTICK_MIN_RANGE<=fy && fy <= JOYSTICK_MAX_RANGE){
         fy = 0;
     }
-    //We need to detect for up and downs
+
+   /** 
+    *  Adding values to buffer to send to BOX.
+    */
     uint8_t *speed =(uint8_t*) calloc(sizeof(uint8_t) , 3); //FX , FY , button
-    speed[0] = fx;
-    speed[1] = fy;
-    speed[3] = Button;
-
-    udp.beginPacket(ROV , ROV_PORT);
+    speed[0] = map(fx , 0 , 1023 , 0 , 255);
+    speed[1] = map(fy , 0 , 1023 , 0 , 255);
+    speed[2] = Button;
+    
     //Now we send
-    udp.write(speed , 3);
-    udp.endPacket();
-    free(speed);
 
+    if(udp.beginPacket(ROV , ROVPORT))
+    {
+      Serial.println("Sending data .....");
+      udp.write(speed , 3);
+      udp.endPacket();
+      free(speed);
+    }
+
+  /**
+   * Start receiving from Box to be shown on LCD for pilot.
+   */
+   
     ///Now we receive 
-    uint8_t size = 0;
-    uint8_t *sensors =(uint8_t*) calloc(sizeof(uint8_t) , 5); // 5 sensors
-    while(size <=0){
-        
-        size = udp.parsePacket();
-        if (size > 0){
-          do{
-            sensors = udp.read(sensors , 5);
-          }
-          while ((size = udp.available()) > 0);
-          udp.flush();
-          udp.stop();
-        }}
 
-     send_data_to_python(sensors);
+    uint8_t sizeOfBuffer = udp.parsePacket();
+    if(sizeOfBuffer > 0){
+      uint8_t buffer[9];
+      udp.read(buffer , 9);
 
+      //Some code for LCD
+    }
+  
 }

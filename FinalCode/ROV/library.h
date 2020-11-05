@@ -23,9 +23,11 @@
 #define KD_VER 0
 
 
-#define  BUTTON_UP 12
-#define  BUTTON_DOWN 10
-#define  NOTHING_PRESSED 0
+
+#define  BUTTON_UP_f 6
+#define  BUTTON_UP_h 4
+#define  BUTTON_DOWN_f 5
+#define  BUTTON_DOWN_h 3
 ///IMU Functions/////////////
 void IMU_begin();
 void IMU_readValues();

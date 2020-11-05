@@ -33,11 +33,11 @@ void IMU_readValues(){
 float IMU_getValue(char type ){
     switch(type){
         case GET_X:
-            return (float)accelerometer_x/GR_CONST;
+            return (float)(accelerometer_x/GR_CONST)*9.81;
         case GET_Y:
-            return (float)accelerometer_y/GR_CONST;
+            return (float)(accelerometer_y/GR_CONST)*9.81;
         case GET_Z:
-            return (float)accelerometer_z/GR_CONST;
+            return (float) (accelerometer_z/GR_CONST)*9.81 ;
         case GET_TEMP:
             return (float)temperature;
         default:return -1;    

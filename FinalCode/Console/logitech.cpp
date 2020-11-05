@@ -56,10 +56,10 @@ void JoystickEvents::PrintValues()
 
 void JoystickEvents::GetValues (uint16_t *Xval, uint16_t *Yval, uint8_t *Hval, uint8_t *Tval, uint8_t *Sval, uint8_t *JBval)
 {
-  Xval = m_X_Val;
-  Yval = m_Y_Val;
-  Hval = m_Hat_Val;
-  Tval = m_Twist_Val;
-  Sval = m_Slider_Val;
-  JBval = m_Joy_Button;
+  *Xval = m_X_Val;
+  *Yval = m_Y_Val;
+  *Hval = m_Hat_Val;
+  *Tval = m_Twist_Val;
+  *Sval = m_Slider_Val;
+  *JBval = m_Joy_Button;
 }
