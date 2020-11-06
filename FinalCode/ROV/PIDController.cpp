@@ -70,7 +70,7 @@ double PIDController::getOutput () {
 }
 
 
-double PIDController::compute (double sensor) {
+double PIDController::compute (double sensor , double force) {
   // Return false if it could not execute;
   // This is the actual PID algorithm executed every loop();
 
@@ -81,11 +81,14 @@ double PIDController::compute (double sensor) {
   unsigned long now = millis(); 
   double timeChange = (double)(now - lastTime);
   double error = setPoint - sensor;
+  if(abs(error) <= 5){
+    return force;
+   }
   
   
  
-   double dErr = (error - lastErr) ;
-   dErr/= now-lastTime;
+  double dErr = (error - lastErr) ;
+  dErr/= now-lastTime;
   double output = error * Kp + dErr * Kd;
 
  if(output>255) output = 255;
