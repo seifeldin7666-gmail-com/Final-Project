@@ -1,16 +1,15 @@
-
 #include "library.h"
 
 EthernetUDP udp;
-#define dir_1 10
-#define pwm_1 2
-#define dir_2 11
-#define pwm_2 3
-#define dir_3 7
-#define pwm_3 4
-#define dir_4 8
+#define dir_1 12
+#define pwm_1 11
+#define dir_2 10
+#define pwm_2 9
+#define dir_3 8
+#define pwm_3 7
+#define dir_4 6
 #define pwm_4 5
-#define dir_5 9
+#define dir_5 4
 #define pwm_5 6 
 
 
@@ -19,7 +18,7 @@ EthernetUDP udp;
 #define first_col 3
 #define second_col 1
 
-PIDController pidX,pidY , pidZ;
+PIDController pidHor , pidZ;
 
 
 float matrix1[4][3]={{-0.3571,0.3571,.25},{0.3571,0.3571,-.25},{0.3571,0.3571,.25},{-0.3571,0.3571,-.25}};
@@ -31,6 +30,7 @@ float matrix2[3][1];
 
 float accX = 0 , accY = 0 , accZ = 0 ;
 unsigned int pressure = 1000 , depth = 0;
+int yaw =  0 ;
 
 
 void setup() {
@@ -41,18 +41,14 @@ void setup() {
   Ethernet.begin(mac,IPAddress(192,168,137,6));//192.168.137.6
   udp.begin(5100); //Port 5000
 
-  pidX.begin();
-  pidY.begin();
+  pidHor.begin();
   pidZ.begin();
 
-  pidX.tune(KP_HOR, KD_HOR,0);
-  pidY.tune(KP_HOR, KD_HOR,0);
+  pidHor.tune(KP_HOR , KD_HOR , 0);
   pidZ.tune(KP_VER,KD_VER,0);
-  pidX.limit(0, 255);
-  pidY.limit(0, 255);
+  pidHor.limit(0, 360);
   pidZ.limit(0,255);
-  pidX.setpoint(0);
-  pidY.setpoint(0);
+  pidHor.setpoint(0);
   pidZ.setpoint(0);
 
   pinMode(pwm_1,OUTPUT);
@@ -88,26 +84,26 @@ void loop() {
  */
   uint8_t button = forces[2];
   switch(button){
-      case BUTTON_UP_f:analogWrite(pwm_5,map(BUTTON_UP_f,0,32,0,255));
+      case BUTTON_UP_f:analogWrite(pwm_5,255);//analogWrite(pwm_5,map(BUTTON_UP_f,0,32,0,255));
                       digitalWrite(dir_5 , 0);
                       pidZ.setpoint(depth);
                       break;
-      case BUTTON_UP_h:analogWrite(pwm_5,map(BUTTON_UP_h,0,16,0,126));
+      case BUTTON_UP_h:analogWrite(pwm_5,126);//analogWrite(pwm_5,map(BUTTON_UP_h,0,16,0,126));
                       digitalWrite(dir_5 , 0);
                       pidZ.setpoint(depth);
                       break;                
-      case BUTTON_DOWN_f:analogWrite(pwm_5,map(BUTTON_DOWN_h,0,25,0,255));
+      case BUTTON_DOWN_f:analogWrite(pwm_5,255);//analogWrite(pwm_5,map(BUTTON_DOWN_h,0,25,0,255));
                       digitalWrite(dir_5 , 1);
                       pidZ.setpoint(depth);
                       break;
-      case BUTTON_DOWN_h:analogWrite(pwm_5,map(BUTTON_DOWN_h,0,9,0,126));
+      case BUTTON_DOWN_h:analogWrite(pwm_5,126);//analogWrite(pwm_5,map(BUTTON_DOWN_h,0,9,0,126));
                       digitalWrite(dir_5 , 1);
                       pidZ.setpoint(depth);
                       break;
-      default:double _Fz=pidZ.compute(depth);
+      default:double _Fz=pidZ.compute(depth , 0);
                   //After some mapping Fz = map()
-                      analogWrite(pwm_5,255);
-                      digitalWrite(dir_5 ,_Fz ? 0 : 1); 
+                      analogWrite(pwm_5,_Fz);
+                      digitalWrite(dir_5 ,_Fz > 0 ? 0 : 1); 
   }
 /**
  * forces[0]:FX
@@ -117,15 +113,27 @@ void loop() {
   Serial.print(forces[0]);
   Serial.print("\tFY is : ");
   Serial.println(forces[1]);
-  pidX.setpoint(forces[0]);//Setting new setpoint
-  pidY.setpoint(forces[1]);
+//  pidX.setpoint(forces[0]);//Setting new setpoint
+//  pidY.setpoint(forces[1]);
 
-  
-  matrix2[0][0] = forces[0];//pidX.compute( ROVMASS * accX );//Current force on ROV
-  matrix2[0][0] = matrix2[0][0] >127 ? map(matrix2[0][0] , 128 , 255 , 0 , 255) :  map(matrix2[0][0] , 0 , 127 , -255 , 0); 
-  matrix2[1][0] = forces[1];//pidY.compute( ROVMASS * accY );
-  matrix2[1][0] = matrix2[1][0] >127 ? map(matrix2[1][0] , 128 , 255 , 0 , 255) :  map(matrix2[1][0] , 0 , 127 , -255 , 0); 
-  matrix2[2][0] = 0;
+  /**
+   * Try adding setpoint.
+   * System will be moment.
+   * Read on gyroscope.
+   * We have Yaw angle
+   * setpoint 90
+   * input 45
+   * 45*5 = 180
+   */
+   //90 map(90 , 0 , 90 , 0 , maximummomment)
+   //maximum moment = 100 ... 
+//  matrix2[0][0] = forces[0];//pidX.compute( ROVMASS * accX , matrix2[0][0]);//Current force on ROV
+  matrix2[0][0] = forces[0] >127 ? map(forces[0] , 128 , 255 , 0 , 255) :  map(forces[0] , 0 , 127 , -255 , 0); 
+//  matrix2[1][0] = pidY.compute( ROVMASS * accY , matrix2[1][0]);
+  matrix2[1][0] = forces[1] >127 ? map(forces[1] , 128 , 255 , 0 , 255) :  map(forces[1] , 0 , 127 , -255 , 0); 
+//  matrix2[1][0] = matrix2[1][0] >127 ? map(matrix2[1][0] , 128 , 255 , 0 , 255) :  map(matrix2[1][0] , 0 , 127 , -255 , 0); 
+  matrix2[2][0] = -1 * pidHor.compute(yaw , matrix2[2][0]); //Moment is obtained from yaw.
+  matrix2[2][0] = matrix2[2][0] > 0 ? map(matrix2[2][0] , 0 , 180 , 0 , 720) : map(matrix2[2][0] , -180 , 0 , -720 , 0);
   /*------------------------------------------------------------------
     //Now we apply forces on each thruster
     -------------------------------------------------------------------------------*/
@@ -149,7 +157,8 @@ void loop() {
   analogWrite(pwm_2,  mul[1][0]);
   analogWrite(pwm_3 , mul[2][0]);
   analogWrite(pwm_4,  mul[3][0]);
-//  delay(200);
+  delay(200);
+return;
 
 //Read from nano//////
 Serial.print("Entered");
@@ -174,7 +183,10 @@ Serial.print("Entered");
             
           send[6] = Serial.read();
           send[7] = Serial.read();
-          send[8] = Serial.read();  
+          send[8] = Serial.read();
+
+          yaw = Serial.read() * 255 + Serial.read();
+            
             
           Serial.flush(); 
 

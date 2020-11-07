@@ -16,8 +16,8 @@
 #define GET_Z  'z'
 #define GET_TEMP 't'
 
-#define KP_HOR 10
-#define KD_HOR 0
+#define KP_HOR 3
+#define KD_HOR 2
 
 #define KP_VER 10
 #define KD_VER 0

@@ -6,10 +6,14 @@
 
 #define GRAVITY 9.81
 
-#define GET_X 'x'
-#define GET_Y  'y'
-#define GET_Z  'z'
+#define GET_X 'X'
+#define GET_Y  'Y'
+#define GET_Z  'Z'
 #define GET_TEMP 't'
+#define GET_YAW 'z'
+#define GET_ROLL 'x'
+#define GET_PITCH 'y'
+
 
 ///IMU Functions/////////////
 void IMU_begin();

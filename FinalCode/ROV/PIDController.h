@@ -18,8 +18,7 @@ class PIDController {
     PIDController();
 
     // Methods - double
-    double compute(double input);
-
+    double PIDController::compute (double sensor , double force);
     // Methods - void
     void begin();
     void tune(double _Kp, double _Ki, double _Kd);
