@@ -157,8 +157,8 @@ void loop() {
   analogWrite(pwm_2,  mul[1][0]);
   analogWrite(pwm_3 , mul[2][0]);
   analogWrite(pwm_4,  mul[3][0]);
-  delay(200);
-return;
+//  delay(200);
+//  return;
 
 //Read from nano//////
 Serial.print("Entered");
