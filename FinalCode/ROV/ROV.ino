@@ -29,7 +29,8 @@ float matrix2[3][1];
 
 
 float accX = 0 , accY = 0 , accZ = 0 ;
-unsigned int pressure = 1000 , depth = 0;
+unsigned int pressure = 1000 ;
+float depth = 0;
 int yaw =  0 ;
 
 
@@ -46,7 +47,7 @@ void setup() {
 
   pidHor.tune(KP_HOR , KD_HOR , 0);
   pidZ.tune(KP_VER,KD_VER,0);
-  pidHor.limit(0, 360);
+  pidHor.limit(-180, 180);
   pidZ.limit(0,255);
   pidHor.setpoint(0);
   pidZ.setpoint(0);
@@ -100,7 +101,7 @@ void loop() {
                       digitalWrite(dir_5 , 1);
                       pidZ.setpoint(depth);
                       break;
-      default:double _Fz=pidZ.compute(depth , 0);
+      default:double _Fz=(-1) * pidZ.compute(depth , 0);
                   //After some mapping Fz = map()
                       analogWrite(pwm_5,_Fz);
                       digitalWrite(dir_5 ,_Fz > 0 ? 0 : 1); 
@@ -162,9 +163,9 @@ void loop() {
 
 //Read from nano//////
 Serial.print("Entered");
-    uint8_t send[9];
+    uint8_t send[8];
     if (Serial.available()){
-          //{int x , float x , sign x , int y , float y , sign y , pressure / 255 , pressure % 255 , depth}
+          //{int x , float x , sign x , int y , float y , sign y , pressure / 255 , pressure % 255 , yaw , signOfYaw}
           send[0] = Serial.read();
           send[1] = Serial.read();
           send[2] = Serial.read();
@@ -183,20 +184,18 @@ Serial.print("Entered");
             
           send[6] = Serial.read();
           send[7] = Serial.read();
-          send[8] = Serial.read();
 
           yaw = Serial.read() * 255 + Serial.read();
-            
             
           Serial.flush(); 
 
           pressure = send[6] * 255 + send[7];
-          depth = send[8]; 
+          depth = pressure / (GRAVITY * DENSITY);
+          
     }
     else{
        accX = 0 , accY = 0 , accZ = 0 ;
        pressure = 10100 , depth = 0;
-      
     }
     Serial.print("X  : ");
     Serial.print(accX);
