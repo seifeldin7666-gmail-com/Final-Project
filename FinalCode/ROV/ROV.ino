@@ -36,10 +36,10 @@ int yaw =  0 ;
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x06}; //0::1::2::3::4::6
-  Ethernet.begin(mac,IPAddress(192,168,137,6));//192.168.137.6
+  Ethernet.begin(mac,IPAddress(192,168,137,50));//192.168.137.6
   udp.begin(5100); //Port 5000
 
   pidHor.begin();
@@ -66,54 +66,57 @@ void setup() {
 //  nano.begin(9500);
 }
 void loop() {
-
   uint8_t *forces = (uint8_t*)calloc(sizeof(uint8_t) , 3); //FX , FY , Button
+  forces[0] = 127;
+  forces[1] = 127;
 
   int framesize = udp.parsePacket();
   if(framesize>0){
-    Serial.println("Received");
+//    Serial.println("Received");
     do{
         int res= udp.read(forces,3);
 
     }
     while ((framesize = udp.available())>0);
     udp.flush(); 
-//    udp.stop();   (uint8_t)
   }
 /*
  * Manage vertical motor
  */
   uint8_t button = forces[2];
-  switch(button){
-      case BUTTON_UP_f:analogWrite(pwm_5,255);//analogWrite(pwm_5,map(BUTTON_UP_f,0,32,0,255));
-                      digitalWrite(dir_5 , 0);
-                      pidZ.setpoint(depth);
-                      break;
-      case BUTTON_UP_h:analogWrite(pwm_5,126);//analogWrite(pwm_5,map(BUTTON_UP_h,0,16,0,126));
-                      digitalWrite(dir_5 , 0);
-                      pidZ.setpoint(depth);
-                      break;                
-      case BUTTON_DOWN_f:analogWrite(pwm_5,255);//analogWrite(pwm_5,map(BUTTON_DOWN_h,0,25,0,255));
-                      digitalWrite(dir_5 , 1);
-                      pidZ.setpoint(depth);
-                      break;
-      case BUTTON_DOWN_h:analogWrite(pwm_5,126);//analogWrite(pwm_5,map(BUTTON_DOWN_h,0,9,0,126));
-                      digitalWrite(dir_5 , 1);
-                      pidZ.setpoint(depth);
-                      break;
-      default:double _Fz=(-1) * pidZ.compute(depth , 0);
-                  //After some mapping Fz = map()
-                      analogWrite(pwm_5,_Fz);
-                      digitalWrite(dir_5 ,_Fz > 0 ? 0 : 1); 
-  }
+  Serial.print("Button is : ");
+  Serial.println(button);
+  button = button < 125 ? map(button , 0 , 124 , -255 , 0) : map(button , 125 , 250 , 0 , 255);  
+  digitalWrite(dir_5 , button > 0 ? 0 : 1);
+  digitalWrite(pwm_5 , button  > 0 ? button : -1*button);
+  
+//  switch(button){
+//      case BUTTON_UP_f:analogWrite(pwm_5,255);//analogWrite(pwm_5,map(BUTTON_UP_f,0,32,0,255));
+//                      digitalWrite(dir_5 , 0);
+//                      pidZ.setpoint(depth);
+//                      break;
+//      case BUTTON_UP_h:analogWrite(pwm_5,126);//analogWrite(pwm_5,map(BUTTON_UP_h,0,16,0,126));
+//                      digitalWrite(dir_5 , 0);
+//                      pidZ.setpoint(depth);
+//                      break;                
+//      case BUTTON_DOWN_f:analogWrite(pwm_5,255);//analogWrite(pwm_5,map(BUTTON_DOWN_h,0,25,0,255));
+//                      digitalWrite(dir_5 , 1);
+//                      pidZ.setpoint(depth);
+//                      break;
+//      case BUTTON_DOWN_h:analogWrite(pwm_5,126);//analogWrite(pwm_5,map(BUTTON_DOWN_h,0,9,0,126));
+//                      digitalWrite(dir_5 , 1);
+//                      pidZ.setpoint(depth);
+//                      break;
+//      default:double _Fz=(-1) * pidZ.compute(depth , 0);
+//                  //After some mapping Fz = map()
+//                      analogWrite(pwm_5,_Fz);
+//                      digitalWrite(dir_5 ,_Fz > 0 ? 0 : 1); 
+//  }
 /**
  * forces[0]:FX
  * forces[1]:FY
 */
-  Serial.print("FX is : ");
-  Serial.print(forces[0]);
-  Serial.print("\tFY is : ");
-  Serial.println(forces[1]);
+ 
 //  pidX.setpoint(forces[0]);//Setting new setpoint
 //  pidY.setpoint(forces[1]);
 
@@ -141,14 +144,14 @@ void loop() {
   free(forces);
   
   getForcesOnThrusters();
-  Serial.print("F1: ");
-  Serial.print(mul[0][0]);
-  Serial.print("\tF2: ");
-  Serial.print(mul[1][0]);
-  Serial.print("\tF3: ");
-  Serial.print(mul[2][0]);  
-  Serial.print("\tF4: ");
-  Serial.println(mul[3][0]);
+//  Serial.print("F1: ");
+//  Serial.print(mul[0][0]);
+//  Serial.print("\tF2: ");
+//  Serial.print(mul[1][0]);
+//  Serial.print("\tF3: ");
+//  Serial.print(mul[2][0]);  
+//  Serial.print("\tF4: ");
+//  Serial.println(mul[3][0]);
    // return;
   analogWrite(dir_1,mul[0][0]< 0 ? 0 : 1);
   analogWrite(dir_2,mul[1][0]< 0 ? 0 : 1);
@@ -158,13 +161,14 @@ void loop() {
   analogWrite(pwm_2,  mul[1][0]);
   analogWrite(pwm_3 , mul[2][0]);
   analogWrite(pwm_4,  mul[3][0]);
-//  delay(200);
-//  return;
+  delay(200);
+//  udp.stop();
 
 //Read from nano//////
-Serial.print("Entered");
+//Serial.print("Entered");
     uint8_t send[8];
     if (Serial.available()){
+          Serial.println("UART REceived");
           //{int x , float x , sign x , int y , float y , sign y , pressure / 255 , pressure % 255 , yaw , signOfYaw}
           send[0] = Serial.read();
           send[1] = Serial.read();
@@ -197,25 +201,28 @@ Serial.print("Entered");
        accX = 0 , accY = 0 , accZ = 0 ;
        pressure = 10100 , depth = 0;
     }
-    Serial.print("X  : ");
-    Serial.print(accX);
-    Serial.print("\tY  : ");
-    Serial.print(accY);    
-    Serial.print("\tPressure  : ");
-    Serial.print(pressure);
-    Serial.print("\tDepth  : ");
-    Serial.println(depth);
+//    Serial.print("X  : ");
+//    Serial.print(accX);
+//    Serial.print("\tY  : ");
+//    Serial.print(accY);    
+//    Serial.print("\tPressure  : ");
+//    Serial.print(pressure);
+//    Serial.print("\tDepth  : ");
+//    Serial.println(depth);
     //IMU must be read at any time as it is displayed in GUI
-
+return;
 //Send data to python
-udp.beginPacket(IPAddress(192,168,137,100) , 12345);
-udp.write(send , 9);
+if(udp.beginPacket(IPAddress(192,168,137,100) , 1234)){
+Serial.println("Sending...");
+uint8_t sned[] = {120,10,154,111};
+udp.write(sned , 4);
 udp.endPacket();
+}
 
 //Send data to console
-udp.beginPacket(udp.remoteIP() ,udp.remotePort());
-udp.write(send , 9);
-udp.endPacket();
+//udp.beginPacket(udp.remoteIP() ,udp.remotePort());
+//udp.write(send , 9);
+//udp.endPacket();
 
       
 }

@@ -1,7 +1,7 @@
 #include "library.h"
 
 void setup(){
-    Serial.begin(9600);
+    Serial.begin(115200);
     IMU_begin();
     PR_begin();
 }
@@ -43,8 +43,11 @@ void loop(){
     toBeSend[8] = yaw  > 0 ? yaw : -1 * yaw ;
 
     //{int x , float x , sign x , int y , float y , sign y , pressure / 255 , pressure % 255 , yaw , signOfYaw}
-
-    Serial.write(toBeSend , 11);
+//    Serial.println(IMU_getValue(GET_X));
+//    Serial.println(IMU_getValue(GET_Y));
+//    Serial.println(IMU_getValue(GET_YAW));
+   
+    Serial.write(toBeSend , 10);
 
 
 }

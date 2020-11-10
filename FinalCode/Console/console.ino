@@ -18,6 +18,7 @@ IPAddress ROV(192,168,137,6);
 
 uint16_t fx , fy;   // 0 - 1023
 uint8_t Button; // 0 - 12 (0 = No button)
+uint8_t slider;
 
 USB                                             Usb;
 USBHub                                          Hub(&Usb);
@@ -28,12 +29,12 @@ JoystickReportParser                            Joy(&JoyEvents);
 
 
 void setup(){
-  
+    
   uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05}; //0::1::2::3::4::5
   Ethernet.begin(mac , IPAddress(192,168,137,7));//192.168.0.7
   udp.begin(5000); // console port for receiving
   
-  Serial.begin(115200);//To send data to python
+  Serial.begin(9600);//To send data to python
 
   
   if (Usb.Init() == -1)
@@ -45,11 +46,13 @@ void setup(){
 }
 
 void loop(){
+  
  
     Usb.Task();                                                    //Use to read joystick input to controller
     // JoyEvents.PrintValues();                                       //Returns joystick values to user
-    JoyEvents.GetValues( &fx, &fy, 0, 0 , 0, &Button);
+    JoyEvents.GetValues( &fx, &fy, 0, 0 , &slider, &Button);
     JoyEvents.PrintValues();
+    
 
 
     //We need to do some operations on forces in order to send them
@@ -67,17 +70,20 @@ void loop(){
     uint8_t *speed =(uint8_t*) calloc(sizeof(uint8_t) , 3); //FX , FY , button
     speed[0] = map(fx , 0 , 1023 , 0 , 255);
     speed[1] = map(fy , 0 , 1023 , 0 , 255);
-    speed[2] = Button;
+    speed[2] = slider;
     
     //Now we send
 
-    if(udp.beginPacket(ROV , ROVPORT))
+    if(udp.beginPacket(IPAddress(192,168,137,6) , 5100))
     {
       Serial.println("Sending data .....");
       udp.write(speed , 3);
       udp.endPacket();
       free(speed);
     }
+    delay(200);
+    udp.stop();
+    return;
 
   /**
    * Start receiving from Box to be shown on LCD for pilot.
